@@ -7,14 +7,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/gorilla/mux"
-
 	"github.com/Jonnay101/request-handler-with-error-rail.git/pkg/database"
 	"github.com/Jonnay101/request-handler-with-error-rail.git/pkg/handlers"
+	"github.com/Jonnay101/request-handler-with-error-rail.git/pkg/routes"
 )
 
 func main() {
-	// get env vars
+	// get relevant variables for the environment
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -22,10 +21,8 @@ func main() {
 	// create required utilities
 	imageRepository := database.CreateNewImageRepository("tmp/images")
 	handlers := handlers.NewHandlers(imageRepository)
-	// set routes
-	muxRouter := mux.NewRouter()
-	muxRouter.HandleFunc("/{person}", hello)
-	muxRouter.HandleFunc("/images/user/{user_uuid}/image/{image_uuid}", handlers.UploadImage)
+	// set up router with attached routes
+	muxRouter := routes.NewRoutes(handlers)
 	// create and start server
 	srv := &http.Server{
 		Handler:      muxRouter,
@@ -34,9 +31,4 @@ func main() {
 		ReadTimeout:  15 * time.Second,
 	}
 	log.Fatal(srv.ListenAndServe())
-}
-
-// hello test handler
-func hello(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "hello, this is the thingy!!!")
 }
