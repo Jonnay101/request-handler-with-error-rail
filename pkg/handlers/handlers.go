@@ -8,12 +8,12 @@ import (
 	"github.com/music-tribe/uuid"
 )
 
-// Handlers holds a representation of the required handler methods
+// Handlers - methods required to satisfy interface
 type Handlers interface {
 	UploadImage(http.ResponseWriter, *http.Request) error
 }
 
-// Request requires methods for it to be satisfied
+// Request - methods required to satisfy interface
 type Request interface {
 	BindRequestBody() Request
 }
@@ -23,21 +23,23 @@ type handlers struct {
 	database.Database
 }
 
-type request struct {
-	HTTPRequest *http.Request
-	FileUUID    uuid.UUID
-	Filename    string
-	FileData    []byte
+// NewHandlers returns a set of methods for handling image requests
+func NewHandlers(db database.Database) Handlers {
+	return &handlers{}
 }
 
-func newRequest(r *http.Request) *request {
-	return &request{
-		HTTPRequest: r,
-	}
+type request struct {
+	HTTPRequest *http.Request `json:"http_request,omitempty"`
+	UserUUID    uuid.UUID     `json:"user_uuid,omitempty"`
+	FileUUID    uuid.UUID     `json:"file_uuid,omitempty"`
+	Filename    string        `json:"filename,omitempty"`
+	FileData    []byte        `json:"file_data,omitempty"`
 }
-func (r *request) GetFileID() uuid.UUID { return r.FileUUID }
-func (r *request) GetFilename() string  { return r.Filename }
-func (r *request) GetFileData() []byte  { return r.FileData }
+
+func newRequest(r *http.Request) *request { return &request{HTTPRequest: r} }
+func (r *request) GetFileID() uuid.UUID   { return r.FileUUID }
+func (r *request) GetFilename() string    { return r.Filename }
+func (r *request) GetFileData() []byte    { return r.FileData }
 func (r *request) BindURLParams() Request {
 	// bind request params
 	return r
@@ -47,8 +49,7 @@ func (r *request) BindQueryParams() Request {
 	return r
 }
 func (r *request) BindRequestBody() Request {
-	// bind request body
-	//// depending on type ie. multipart form or JSON
+	// bind request body - depending on type ie. multipart form or JSON
 	return r
 }
 
