@@ -25,8 +25,8 @@ type imageStore struct {
 	StoragePath string
 }
 
-// CreateNewImageStore will create a new database session
-func CreateNewImageStore(storagePath string) Database {
+// CreateNewImageRepository will create a new database session
+func CreateNewImageRepository(storagePath string) Database {
 	return &imageStore{StoragePath: storagePath}
 }
 
