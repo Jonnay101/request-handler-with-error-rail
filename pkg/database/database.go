@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -14,17 +15,25 @@ type request interface {
 	GetID() uuid.UUID
 }
 
-// Database shows the required methods to satisfy this project
+// Database - these methods are required to satisfy this interface
 type Database interface {
 	Post(request) error
 }
 
 // ImageStore is this packages db
-type imageStore struct{}
+type imageStore struct {
+	StoragePath string
+}
 
 // CreateNewImageStore will create a new database session
-func CreateNewImageStore() (Database, error) {
-	return &imageStore{}, nil
+func CreateNewImageStore(storagePath string) Database {
+	return &imageStore{StoragePath: storagePath}
+}
+
+// createStorageKeyPath uses the existing db storage path and the images uuid to create a unique storage path
+func (s *imageStore) createStorageKeyPath(imageUUID uuid.UUID) string {
+	imgUUIDString := imageUUID.String()
+	return fmt.Sprintf("%s/%s/%s", s.StoragePath, imgUUIDString[:2], imgUUIDString)
 }
 
 // Post will add an image to the db
