@@ -37,7 +37,7 @@ type request struct {
 	FileUUID    uuid.UUID     `json:"file_uuid,omitempty" bson:"file_uuid"`
 	Filename    string        `json:"filename,omitempty"`
 	FileData    []byte        `json:"file_data,omitempty"`
-	Err         error         `json:"_, omitempty"`
+	Err         error         `json:"-"`
 }
 
 func newRequest(r *http.Request) *request { return &request{HTTPRequest: r} }
