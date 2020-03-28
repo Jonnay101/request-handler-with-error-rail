@@ -13,7 +13,7 @@ func NewRoutes(handlers handlers.Handlers) (mr *mux.Router) {
 	mr = mux.NewRouter()
 	// set routes
 	mr.HandleFunc("/{person}", hello).Methods("GET")
-	mr.HandleFunc("/images/user/{user_uuid}/image/{image_uuid}", handlers.UploadImage).Methods("POST")
+	mr.HandleFunc("/image/{file_uuid}", handlers.UploadImage).Methods("GET", "POST").GetError()
 	return
 }
 
