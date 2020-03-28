@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/Jonnay101/request-handler-with-error-rail.git/pkg/glitch"
 	"github.com/gorilla/mux"
 	"github.com/music-tribe/uuid"
 )
@@ -39,23 +40,28 @@ func (r *request) ReturnError() error   { return r.Err }
 // it then decodes this JSON into our request struct
 func (r *request) BindURLParams() Request {
 	if r.Err != nil {
+		r.Err = glitch.NewError(r.Err, 400)
 		return r
 	}
 	URLParams := mux.Vars(r.HTTPRequest)
 	JSONmarshallingBuffer := bytes.NewBuffer([]byte{})
 	r.Err = json.NewEncoder(JSONmarshallingBuffer).Encode(URLParams)
 	if r.Err == nil {
-		json.NewDecoder(JSONmarshallingBuffer).Decode(&r)
+		r.Err = glitch.NewError(r.Err, 400)
+		return r
 	}
+	r.Err = json.NewDecoder(JSONmarshallingBuffer).Decode(&r)
 	return r
 }
 
 // BindQueryParams -
 func (r *request) BindQueryParams() Request {
-	if r.Err == nil {
-		// bind the query params - remove values from arrays
-		r.QueryParams = removeMapValuesFromArrays(r.HTTPRequest.URL.Query())
+	if r.Err != nil {
+		r.Err = glitch.NewError(r.Err, http.StatusBadRequest)
+		return r
 	}
+	// bind the query params - remove values from arrays
+	r.QueryParams = removeMapValuesFromArrays(r.HTTPRequest.URL.Query())
 	return r
 }
 func (r *request) BindRequestBody() Request {
