@@ -10,7 +10,7 @@ import (
 
 // Handlers - methods required to satisfy interface
 type Handlers interface {
-	UploadImage(http.ResponseWriter, *http.Request) error
+	UploadImage(http.ResponseWriter, *http.Request)
 }
 
 // Request - methods required to satisfy interface
@@ -55,8 +55,7 @@ func (r *request) BindRequestBody() Request {
 
 // UploadImage takes a multipart image file and stores it in the db
 // the image will also be displayed to the user
-func (h *handlers) UploadImage(w http.ResponseWriter, r *http.Request) error {
+func (h *handlers) UploadImage(w http.ResponseWriter, r *http.Request) {
 	uploadRequest := newRequest(r)
 	fmt.Printf("%v+", uploadRequest)
-	return nil
 }
