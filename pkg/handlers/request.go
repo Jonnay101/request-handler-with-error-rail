@@ -24,6 +24,7 @@ type request struct {
 	Filename    string            `json:"filename,omitempty"`
 	FileData    []byte            `json:"file_data,omitempty"`
 	QueryParams map[string]string `json:"query_params,omitempty"`
+	JSONBuffer  *bytes.Buffer     `json:"-"`
 	Err         error             `json:"-"`
 }
 
@@ -36,18 +37,15 @@ func (r *request) GetFilename() string  { return r.Filename }
 func (r *request) GetFileData() []byte  { return r.FileData }
 func (r *request) ReturnError() error   { return r.Err }
 
-// BindURLParams encodes the map of url params into JSON
-// it then decodes this JSON into our request struct
+// BindURLParams binds the dynamic params
+// from the url to the handlers request object
 func (r *request) BindURLParams() Request {
-	if r.Err != nil {
-		r.Err = glitch.NewError(r.Err, 400)
+	if r.errorHasOccured(http.StatusBadRequest) {
 		return r
 	}
-	URLParams := mux.Vars(r.HTTPRequest)
 	JSONmarshallingBuffer := bytes.NewBuffer([]byte{})
-	r.Err = json.NewEncoder(JSONmarshallingBuffer).Encode(URLParams)
-	if r.Err == nil {
-		r.Err = glitch.NewError(r.Err, 400)
+	r.Err = json.NewEncoder(JSONmarshallingBuffer).Encode(r.getParamsFromURL())
+	if r.errorHasOccured(http.StatusBadRequest) {
 		return r
 	}
 	r.Err = json.NewDecoder(JSONmarshallingBuffer).Decode(&r)
@@ -56,8 +54,7 @@ func (r *request) BindURLParams() Request {
 
 // BindQueryParams -
 func (r *request) BindQueryParams() Request {
-	if r.Err != nil {
-		r.Err = glitch.NewError(r.Err, http.StatusBadRequest)
+	if r.errorHasOccured(http.StatusBadRequest) {
 		return r
 	}
 	// bind the query params - remove values from arrays
@@ -70,4 +67,25 @@ func (r *request) BindRequestBody() Request {
 	}
 	// bind request body - depending on type ie. multipart form or JSON
 	return r
+}
+
+func (r *request) errorHasOccured(errorStatusCode int) bool {
+	if r.Err != nil {
+		r.Err = glitch.MakeCustomError(r.Err, errorStatusCode)
+		return true
+	}
+	return false
+}
+
+func (r *request) getParamsFromURL() map[string]string {
+	return mux.Vars(r.HTTPRequest)
+}
+
+func (r *request) encodeParamsToJSONBuffer() error {
+	r.JSONBuffer = bytes.NewBuffer([]byte{})
+	return json.NewEncoder(r.JSONBuffer).Encode(r.getParamsFromURL())
+}
+
+func (r *request) unmarshalJSONIntoRequestObject() error {
+	return json.NewDecoder(r.JSONBuffer).Decode(&r)
 }
